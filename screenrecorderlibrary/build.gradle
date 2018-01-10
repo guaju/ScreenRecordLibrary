@@ -1,15 +1,26 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.github.dcendents.android-maven'
+apply plugin:'com.github.dcendents.android-maven'
+apply plugin:'com.jfrog.bintray'
+
+
+//javadoc {
+//    options{
+//        encoding "UTF-8"
+//        charSet 'UTF-8'
+//        author true
+//        version true
+//        links "http://docs.oracle.com/javase/7/docs/api"
+//    }
+//}
 
 
 android {
     compileSdkVersion 26
-
+    buildToolsVersion "26.0.2"
 
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 14
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -27,58 +38,90 @@ android {
 
 }
 
-group = 'com.paperairplane.screenrecoderlibray'
-version = '1.0.0'
+group = 'com.guaju'
+version = '1.0.1'
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:26.0.0-beta1'
+}
+install{
+    repositories.mavenInstaller {
+        // 生成pom文件
+        pom {
+            project {
+                packaging 'aar'
+                description 'screen record for anroid 5.0'  //描述，可不设置此属性
+                name 'screenrecorderlibrary' //名字
+                url 'https://github.com/guaju/ScreenRecordLibrary'     //项目主页地址，如果没有，通常可以使用github项目的地址
+                // 设置协议证书，通常就是Apache 2.0开源协议
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution '' //描述，可不设置此属性
+                    }
+                }
 
-    implementation 'com.android.support:appcompat-v7:26.0.0-beta1'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:0.5'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
+                //开发者信息
+                developers {
+                    developer {
+                        id 'guaju' //id 这里具体填什么我都不知道，随便填了自己的常用名，这些信息最后都会写入pom文件
+                        name 'guaju' //名字
+                        email 'guaju@126.com' //邮箱
+                    }
+                }
+
+                //配置相关项目链接
+                scm {
+                    connection 'https://github.com/guaju/ScreenRecordLibrary.git' //我使用的是项目在github上生成的git地址
+                    developerConnection 'https://github.com/guaju/ScreenRecordLibrary.git'//我使用的是项目在github上生成的git地址
+                    url 'https://github.com/guaju/ScreenRecordLibrary.git'//项目地址  我使用的项目在github上的地址
+                }
+            }
+        }
+    }
 }
 
-task generateSourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
+//生成对应的source.jar
+task sourcesJar(type: Jar) {
+    classifier='sources'
 }
 
-task generateJavadocs(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+//生成java doc文件
+task javadoc(type: Javadoc) {
+    source=android.sourceSets.main.java.srcDirs
+    classpath+=project.files(android.getBootClasspath().join(File.pathSeparator))
+    failOnError=false
 }
 
-task generateJavadocsJar(type: Jar, dependsOn: generateJavadocs) {
-    from generateJavadocs.destinationDir
-    classifier 'javadoc'
+//生成对应的javadoc.jar
+task javadocJar(type: Jar,dependsOn: javadoc) {
+    classifier='javadoc'
+    from javadoc.destinationDir
 }
+
 artifacts{
-    archives generateJavaDocsJar
-    archives generateSourcesJar
+//很多童鞋在后面说到的install那一步经常出错，主要原因是因为无法生成java doc，可以把这一步注释，省去doc的生成。
+    archives javadocJar
+    archives sourcesJar
 }
-Properties properties = new Properties()
+
+Properties properties=new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
-bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.apikey")
-
+bintray{
+    user=properties.getProperty("bintray.user")
+    key=properties.getProperty("bintray.apikey")
+    configurations=['archives']
     pkg {
-        repo = 'ScreenRecorderLibary'
-        name = 'com.paperairplane.screenrecoderlibray'
-
-        version {
-            name = '1.0.0-release'
-            desc = "screen recoder for android 5.0"
-            vcsTag = '1.0.0'
-        }
-
-        licenses = ['Apache-2.0']
-        vcsUrl = '你的项目github地址url + .git'
-        websiteUrl = '你的项目github地址'
+        userOrg="paperairplane"
+        repo="ScreenRecorder"
+        name="ScreenRecorderLibary" //在bintray上的项目名字
+        websiteUrl="https://github.com/guaju/ScreenRecordLibrary" //项目地址  我使用的github项目地址
+        vcsUrl="https://github.com/guaju/ScreenRecordLibrary.git" //项目管理地址  我使用的github上对应的git地址
+        licenses=["Apache-2.0"]
+        publish=true
     }
-
-    configurations = ['archives']
-
 }
+
